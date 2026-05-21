@@ -1,5 +1,13 @@
 const Booking = require('../models/Booking');
 const Event = require('../models/Event');
+const Payment = require('../models/Payment');
+const Cancellation = require('../models/Cancellation');
+
+// Lazy-load io to avoid circular dependency issues
+const getIO = () => {
+  try { return require('../index').io; } catch { return null; }
+};
+
 
 exports.bookEvent = async (req, res) => {
   try {
@@ -24,6 +32,22 @@ exports.bookEvent = async (req, res) => {
       tickets, 
       totalPrice 
     });
+
+    // Auto-create a Payment record so admin Payment Management has real data
+    await Payment.create({
+      user: req.user._id,
+      trip: eventId,
+      amount: totalPrice,
+      status: 'Pending',
+      paymentMethod: 'Cash on Arrival',
+      currency: 'INR'
+    });
+
+    // Emit real-time notification to admin dashboard
+    const io = getIO();
+    if (io) {
+      io.emit('new-booking', { tripName: event.eventTitle, userId: req.user._id });
+    }
 
     res.status(201).json({ 
       success: true, 
@@ -51,9 +75,21 @@ exports.cancelBooking = async (req, res) => {
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
     booking.status = 'cancelled';
     const event = await Event.findById(booking.event);
-    event.availableSeats += booking.tickets;
-    await event.save();
+    if (event) {
+      event.availableSeats += booking.tickets;
+      await event.save();
+    }
     await booking.save();
+
+    // Auto-create a Cancellation record for admin analytics
+    await Cancellation.create({
+      booking: booking._id,
+      user: booking.user,
+      trip: booking.event,
+      reason: 'Cancelled by user',
+      refundStatus: 'Pending'
+    });
+
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: err.message });

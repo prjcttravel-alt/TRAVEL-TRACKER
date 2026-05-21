@@ -57,8 +57,9 @@ const AdminLayout = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    // Basic socket connection for real-time
-    const socket = io(window.location.origin);
+    // In dev the admin runs on :5174 but the socket server is on :5001
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+    const socket = io(SOCKET_URL);
     socket.on('new-booking', (data) => {
       setNotifications(prev => [{ id: Date.now(), text: `New booking for ${data.tripName}` }, ...prev]);
     });

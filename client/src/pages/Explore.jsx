@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getEvents, getCategories } from '../api/endpoints';
+import API from '../api/axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, MapPin, Calendar, Users, Filter, X, ChevronRight, Compass, Wallet, AlertCircle, Clock, Mountain, Utensils, Home, Bus } from 'lucide-react';
@@ -20,6 +21,26 @@ export default function Explore() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCategoryId = searchParams.get('category');
   const [searchQuery, setSearchQuery] = useState('');
+  const trackDebounceRef = useRef(null);
+
+  // Track search keywords for admin analytics (debounced 800ms)
+  const trackKeyword = useCallback((keyword) => {
+    if (trackDebounceRef.current) clearTimeout(trackDebounceRef.current);
+    if (!keyword || keyword.trim().length < 2) return;
+    trackDebounceRef.current = setTimeout(async () => {
+      try {
+        await API.post('/search/track', { keyword: keyword.trim() });
+      } catch {
+        // silently fail — tracking is non-critical
+      }
+    }, 800);
+  }, []);
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    trackKeyword(val);
+  };
 
   const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8df9?auto=format&fit=crop&w=1200&q=80';
 
@@ -90,7 +111,7 @@ export default function Explore() {
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-ocean transition-colors" />
               <input 
                 type="text" placeholder="Search city, trail, or trek..."
-                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchQuery} onChange={handleSearchChange}
                 className="w-full pl-16 pr-8 py-6 bg-slate-50 border border-slate-100 rounded-[2rem] outline-none focus:ring-4 ring-primary-ocean/10 transition-all font-medium text-dark-slate"
               />
             </div>

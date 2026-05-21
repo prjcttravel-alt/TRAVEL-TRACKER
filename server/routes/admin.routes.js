@@ -36,5 +36,11 @@ router.get('/summary', adminController.getDashboardSummary);
 
 // User Management
 router.get('/users', adminController.getUsersWithBookings);
+router.put('/users/:id/block', adminController.blockUser);
+router.delete('/users/:id', adminController.deleteUser);
+
+// Cancellation Analytics
+router.get('/cancellations', adminController.getCancellations);
+router.get('/cancellations/stats', adminController.getCancellationStats);
 
 module.exports = router;

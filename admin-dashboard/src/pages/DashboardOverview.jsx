@@ -7,15 +7,9 @@ const DashboardOverview = () => {
   const [summary, setSummary] = useState({
     totalUsers: 0, totalTrips: 0, activeTrips: 0, totalRevenue: 0, totalBookings: 0, pendingPayments: 0
   });
+  const [chartData, setChartData] = useState([]);
 
-  const chartData = [
-    { name: 'Jan', revenue: 4000, bookings: 24 },
-    { name: 'Feb', revenue: 3000, bookings: 13 },
-    { name: 'Mar', revenue: 5000, bookings: 38 },
-    { name: 'Apr', revenue: 2780, bookings: 19 },
-    { name: 'May', revenue: 8890, bookings: 48 },
-    { name: 'Jun', revenue: 12390, bookings: 68 },
-  ];
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -28,7 +22,28 @@ const DashboardOverview = () => {
         console.error("Failed to fetch summary", err);
       }
     };
+
+    const fetchChartData = async () => {
+      try {
+        const res = await api.get('/admin/bookings/monthly');
+        if (res.data.success && res.data.data.length > 0) {
+          const formatted = res.data.data.map(item => ({
+            name: MONTHS[item._id - 1],
+            revenue: item.totalRevenue,
+            bookings: item.totalBookings,
+          }));
+          setChartData(formatted);
+        } else {
+          // Fallback placeholder so charts don't look empty on first load
+          setChartData(MONTHS.slice(0, 6).map(m => ({ name: m, revenue: 0, bookings: 0 })));
+        }
+      } catch (err) {
+        console.error("Failed to fetch chart data", err);
+      }
+    };
+
     fetchSummary();
+    fetchChartData();
   }, []);
 
   const statCards = [

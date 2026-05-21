@@ -245,6 +245,7 @@ exports.getUsersWithBookings = async (req, res) => {
           email: 1,
           role: 1,
           password: 1, // Hashed password as requested
+          isBlocked: 1,
           createdAt: 1,
           bookedTrips: "$bookedEvents.eventTitle"
         }
@@ -257,3 +258,73 @@ exports.getUsersWithBookings = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// --- Block / Unblock User ---
+exports.blockUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    user.isBlocked = !user.isBlocked;
+    await user.save();
+    res.status(200).json({ success: true, message: `User ${user.isBlocked ? 'blocked' : 'unblocked'} successfully`, data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// --- Delete User ---
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.status(200).json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// --- Cancellations ---
+exports.getCancellations = async (req, res) => {
+  try {
+    const cancellations = await Cancellation.find()
+      .populate('user', 'name email')
+      .populate('trip', 'eventTitle')
+      .populate('booking')
+      .sort({ cancelledAt: -1 });
+    res.status(200).json({ success: true, data: cancellations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getCancellationStats = async (req, res) => {
+  try {
+    const totalCancellations = await Cancellation.countDocuments();
+    const totalBookings = await Booking.countDocuments();
+    const cancellationRate = totalBookings > 0
+      ? ((totalCancellations / totalBookings) * 100).toFixed(1)
+      : 0;
+
+    // Aggregate reason breakdown
+    const reasonBreakdown = await Cancellation.aggregate([
+      { $group: { _id: '$reason', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Pending refunds count
+    const pendingRefunds = await Cancellation.countDocuments({ refundStatus: 'Pending' });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalCancellations,
+        cancellationRate: `${cancellationRate}%`,
+        pendingRefunds,
+        reasonBreakdown
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

@@ -1,14 +1,36 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 const seedDatabase = require('./utils/seed');
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.io — used for real-time admin notifications
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('🔌 Admin socket connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('🔌 Admin socket disconnected:', socket.id);
+  });
+});
+
+// Export io so controllers can emit events (e.g., new-booking)
+module.exports.io = io;
 
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
+  'http://localhost:5001',
   process.env.CLIENT_URL,
   process.env.RENDER_EXTERNAL_URL,       // Render auto-injects this
 ].filter(Boolean);
@@ -45,6 +67,7 @@ app.use('/api/messages', require('./routes/message.routes'));
 app.use('/api/recommendations', require('./routes/recommendation.routes'));
 app.use('/api/reports', require('./routes/report.routes'));
 app.use('/api/travel', require('./routes/travel.routes'));
+app.use('/api/search', require('./routes/search.routes'));
 
 const path = require('path');
 
@@ -67,7 +90,7 @@ const startServer = async () => {
 
   // Attach a server-level error handler BEFORE listen so EADDRINUSE
   // never becomes an unhandled exception that crashes the process.
-  const server = app.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
   });
 

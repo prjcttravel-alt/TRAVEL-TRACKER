@@ -1,0 +1,13 @@
+feat: connect backend, client and admin dashboard
+
+- Admin routes: add block/delete user, cancellations endpoints
+- AdminController: blockUser, deleteUser, getCancellations, getCancellationStats
+- BookingController: auto-create Payment on booking, Cancellation on cancel
+- Socket.io server: real-time new-booking notifications for admin
+- New search.routes.js: POST /api/search/track for keyword analytics
+- DashboardOverview: replace hardcoded chart with real monthly API data
+- UserManagement: wire Block/Unblock + Delete buttons with API + status badges
+- CancellationReports: replace mock data with real API calls
+- AdminLayout: fix socket URL to :5001 for dev mode
+- Explore: debounced search keyword tracking for admin Search Analytics
+- CORS: add localhost:5001 to allowed origins
