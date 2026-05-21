@@ -1,0 +1,13 @@
+fix: production deployment - fix blank screen on Render
+
+- server/index.js: fix static file paths using ROOT_DIR (path.resolve from __dirname/..)
+  so both client/dist and admin-dashboard/dist are found correctly on Render
+- server/index.js: skip auto-seed in production (NODE_ENV=production) to
+  avoid wiping real data on every deploy
+- server/index.js: add error callback to sendFile so broken build shows
+  a helpful message instead of silent blank screen
+- render.yaml: fix buildCommand to install all deps + build both frontends
+  before starting; fix startCommand to node server/index.js
+- render.yaml: add CLIENT_URL env var entry
+- AdminLayout.jsx: use window.location.origin for socket in production,
+  localhost:5001 in dev (import.meta.env.PROD flag)

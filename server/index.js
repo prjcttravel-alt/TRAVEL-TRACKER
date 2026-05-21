@@ -70,19 +70,26 @@ app.use('/api/travel', require('./routes/travel.routes'));
 app.use('/api/search', require('./routes/search.routes'));
 
 const path = require('path');
+const ROOT_DIR = path.resolve(__dirname, '..');
 
 // Serve Admin Dashboard Static Files
-app.use('/admin-dashboard', express.static(path.join(__dirname, '../admin-dashboard/dist')));
+app.use('/admin-dashboard', express.static(path.join(ROOT_DIR, 'admin-dashboard', 'dist')));
 
-// Handle Admin Dashboard SPA Routing
-app.get('/admin-dashboard*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../admin-dashboard/dist', 'index.html'));
+// Handle Admin Dashboard SPA Routing (must be before the catch-all)
+app.get('/admin-dashboard/*', (req, res) => {
+  const indexFile = path.join(ROOT_DIR, 'admin-dashboard', 'dist', 'index.html');
+  res.sendFile(indexFile, (err) => {
+    if (err) res.status(404).send('Admin dashboard not built. Run: npm run build:admin');
+  });
 });
 
-// Serve User Client
-app.use(express.static(path.join(__dirname, '../client/dist')));
+// Serve User Client (catch-all — must be last)
+app.use(express.static(path.join(ROOT_DIR, 'client', 'dist')));
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../client/dist', 'index.html'));
+  const indexFile = path.join(ROOT_DIR, 'client', 'dist', 'index.html');
+  res.sendFile(indexFile, (err) => {
+    if (err) res.status(404).send('Client not built. Run: npm run build:client');
+  });
 });
 
 const startServer = async () => {
@@ -108,16 +115,20 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    // Only run seedDatabase if Mongoose is connected
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState === 1) {
-      try {
-        await seedDatabase();
-      } catch (seedErr) {
-        console.error('⚠️ Database seeding failed:', seedErr.message);
+    // Only seed in development — never wipe production data on every deploy
+    if (process.env.NODE_ENV !== 'production') {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) {
+        try {
+          await seedDatabase();
+        } catch (seedErr) {
+          console.error('⚠️ Database seeding failed:', seedErr.message);
+        }
+      } else {
+        console.warn('⚠️ Database seeding skipped because mongoose is not connected.');
       }
     } else {
-      console.warn('⚠️ Database seeding skipped because mongoose is not connected.');
+      console.log('🚀 Production mode: skipping auto-seed to preserve data.');
     }
   } catch (error) {
     console.error('⚠️ Failed to configure database:', error.message);

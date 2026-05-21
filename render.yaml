@@ -4,14 +4,16 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: npm run build
-    startCommand: npm start
+    buildCommand: npm install --prefix ./server --legacy-peer-deps && npm install --prefix ./client --legacy-peer-deps && npm install --prefix ./admin-dashboard --legacy-peer-deps && npm run build:client && npm run build:admin
+    startCommand: node server/index.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: MONGO_URI
-        sync: false          # You enter this in Render dashboard
+        sync: false          # Enter this in Render dashboard
       - key: JWT_SECRET
-        sync: false          # You enter this in Render dashboard
+        sync: false          # Enter this in Render dashboard
       - key: PORT
         value: 10000
+      - key: CLIENT_URL
+        sync: false          # Your Render app URL e.g. https://travel-tracker.onrender.com

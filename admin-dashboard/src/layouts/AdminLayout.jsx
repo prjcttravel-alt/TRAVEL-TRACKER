@@ -57,14 +57,19 @@ const AdminLayout = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    // In dev the admin runs on :5174 but the socket server is on :5001
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+    // In production: same-origin (Express serves everything)
+    // In dev: admin runs on :5174 so we need to point to the backend :5001
+    const isProd = import.meta.env.PROD;
+    const SOCKET_URL = isProd
+      ? window.location.origin
+      : (import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001');
     const socket = io(SOCKET_URL);
     socket.on('new-booking', (data) => {
       setNotifications(prev => [{ id: Date.now(), text: `New booking for ${data.tripName}` }, ...prev]);
     });
     return () => socket.disconnect();
   }, []);
+
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Overview', path: '/' },
