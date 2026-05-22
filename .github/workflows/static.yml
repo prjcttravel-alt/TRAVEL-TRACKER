@@ -36,6 +36,10 @@ jobs:
         working-directory: ./client
         run: npm ci || npm install --legacy-peer-deps
         
+      - name: Generate Static API
+        working-directory: ./server
+        run: npm install mongoose && node build-data.js
+        
       - name: Build Client
         working-directory: ./client
         run: npm run build
