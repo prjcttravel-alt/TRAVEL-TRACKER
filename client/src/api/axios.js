@@ -36,33 +36,44 @@ API.interceptors.response.use(
     return res;
   },
   (err) => {
-    if (import.meta.env.PROD && err.config) {
-      const isPostPutDelete = ['post', 'put', 'delete'].includes(err.config.method);
-      const isProfileGet = err.config.method === 'get' && err.config.url.includes('/auth/profile');
-      
-      if (isPostPutDelete || isProfileGet) {
+      if (import.meta.env.PROD && err.config) {
         console.log('Intercepted failing PROD request, mocking success response for demo purposes.');
         
         const mockUser = {
           _id: 'mock-user-123',
-          name: 'Demo User',
+          name: 'Demo Explorer',
           email: 'demo@traveltracker.com',
-          role: 'user'
+          role: 'user',
+          profileImage: 'https://i.pravatar.cc/150?u=demo'
         };
 
+        // Auth
         if (err.config.url.includes('/auth/login') || err.config.url.includes('/auth/register')) {
           localStorage.setItem('token', 'mock-jwt-token-123');
           return Promise.resolve({ data: { user: mockUser, token: 'mock-jwt-token-123' } });
         }
-        
         if (err.config.url.includes('/auth/profile')) {
           return Promise.resolve({ data: mockUser });
         }
+        
+        // MyBookings
+        if (err.config.url.includes('/bookings') && err.config.method === 'get') {
+          return Promise.resolve({ data: [] }); // Empty logbook for demo
+        }
 
-        // Mock generic success for bookings, reviews, etc.
+        // Community Feed
+        if (err.config.url.includes('/posts') && err.config.method === 'get') {
+          return Promise.resolve({ data: [] }); // Empty feed for demo
+        }
+
+        // Catch-all for PUT/POST/DELETE (e.g. updating profile, adding reviews)
+        // If updating profile, return the mock user so context doesn't crash
+        if (err.config.method === 'put' && err.config.url.includes('/auth/profile')) {
+           return Promise.resolve({ data: mockUser });
+        }
+
         return Promise.resolve({ data: { success: true, message: 'Mock action successful' } });
       }
-    }
     return Promise.reject(err);
   }
 );
