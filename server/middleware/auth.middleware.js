@@ -22,7 +22,7 @@ const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret123');
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {

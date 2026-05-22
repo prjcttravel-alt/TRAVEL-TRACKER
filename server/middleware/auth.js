@@ -9,7 +9,7 @@ const protect = async (req, res, next) => {
   if (!token) return res.status(401).json({ message: 'Not authorized' });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret123');
     req.user = await User.findById(decoded.id).select('-password');
     next();
   } catch (err) {
