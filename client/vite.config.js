@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/travel-agency/',
+  base: process.env.RENDER ? '/' : '/travel-agency/',
   plugins: [react()],
   server: {
     proxy: {
