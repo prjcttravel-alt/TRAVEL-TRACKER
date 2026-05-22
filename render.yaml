@@ -4,7 +4,7 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: npm install --prefix ./server --legacy-peer-deps && npm install --prefix ./client --legacy-peer-deps && npm install --prefix ./admin-dashboard --legacy-peer-deps && npm run build:client && npm run build:admin
+    buildCommand: npm install --prefix ./server --legacy-peer-deps && npm install --prefix ./client --legacy-peer-deps --include=dev && npm install --prefix ./admin-dashboard --legacy-peer-deps --include=dev && npm run build:client && npm run build:admin
     startCommand: node server/index.js
     envVars:
       - key: NODE_ENV
