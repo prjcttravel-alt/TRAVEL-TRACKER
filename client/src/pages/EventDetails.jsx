@@ -60,7 +60,7 @@ export default function EventDetails() {
 
   if (!event) return (
     <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
-      <p className="text-2xl font-black text-dark-slate mb-4">Trip not found</p>
+      <p className="text-2xl font-black text-dark-slate mb-4">Expedition not found</p>
       <Link to="/explore" className="btn-travel bg-primary-ocean text-white">Back to Explore</Link>
     </div>
   );
