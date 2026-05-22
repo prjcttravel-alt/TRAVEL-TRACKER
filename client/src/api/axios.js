@@ -29,8 +29,9 @@ API.interceptors.request.use((req) => {
 API.interceptors.response.use(
   (res) => {
     if (import.meta.env.PROD && res.config.originalEventId) {
-      const event = (res.data || []).find(e => e._id === res.config.originalEventId);
-      res.data = { data: event || (res.data && res.data[0]), success: true };
+      const eventsArray = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const event = eventsArray.find(e => e._id === res.config.originalEventId);
+      res.data = { data: event || eventsArray[0], success: true };
     }
     return res;
   },
