@@ -7,13 +7,16 @@ API.interceptors.request.use((req) => {
   if (token) req.headers.Authorization = `Bearer ${token}`;
   
   if (import.meta.env.PROD) {
-    // Redirect GET requests for data to our static generated files
     if (req.method === 'get') {
       if (req.url === '/categories' || req.url.startsWith('/categories?')) {
         req.baseURL = '/TRAVEL-TRACKER';
         req.url = '/api/categories.json';
       } else if (req.url === '/events' || req.url.startsWith('/events?')) {
         req.baseURL = '/TRAVEL-TRACKER';
+        req.url = '/api/events.json';
+      } else if (req.url.match(/^\/events\/[a-zA-Z0-9]+$/)) {
+        req.baseURL = '/TRAVEL-TRACKER';
+        req.originalEventId = req.url.split('/').pop();
         req.url = '/api/events.json';
       }
     }
@@ -22,9 +25,15 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
-// Add a response interceptor to mock POST/PUT requests in PROD
+// Add a response interceptor to mock POST/PUT requests in PROD and handle single event filtering
 API.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (import.meta.env.PROD && res.config.originalEventId) {
+      const event = (res.data || []).find(e => e._id === res.config.originalEventId);
+      res.data = { data: event || (res.data && res.data[0]), success: true };
+    }
+    return res;
+  },
   (err) => {
     if (import.meta.env.PROD && err.config) {
       const isPostPutDelete = ['post', 'put', 'delete'].includes(err.config.method);
