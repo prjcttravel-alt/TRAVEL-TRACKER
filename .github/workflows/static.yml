@@ -43,7 +43,7 @@ jobs:
         run: npm run build
         env:
           CI: false
-          VITE_API_URL: https://travel-agency-7xjp.onrender.com/api
+          VITE_API_URL: https://travel-tracker-cxy4.onrender.com/api
         
       - name: Setup Pages
         uses: actions/configure-pages@v5
