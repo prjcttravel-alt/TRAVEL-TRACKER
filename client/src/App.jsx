@@ -20,7 +20,7 @@ import Community from './pages/Feed';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={import.meta.env.BASE_URL}>
         <Toaster position="top-right" />
         <Routes>
           <Route element={<MainLayout />}>
