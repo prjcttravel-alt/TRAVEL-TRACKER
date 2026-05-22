@@ -10,7 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGO_URI
-        value: mongodb+srv://prjcttravel_db_user:Pokemon47@cluster0.zrrkpq9.mongodb.net/?appName=Cluster0
+        sync: false          # Enter this in Render dashboard
       - key: JWT_SECRET
         sync: false          # Enter this in Render dashboard
       - key: PORT
