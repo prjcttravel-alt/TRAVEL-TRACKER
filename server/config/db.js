@@ -4,8 +4,7 @@ mongoose.set('bufferTimeoutMS', 60000);
 
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGO_URI;
-    if (!uri) throw new Error('MONGO_URI is not defined');
+    const uri = process.env.MONGO_URI || 'mongodb+srv://prjcttravel_db_user:Pokemon47@cluster0.zrrkpq9.mongodb.net/?appName=Cluster0';
     const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 3000,
       connectTimeoutMS: 3000,
